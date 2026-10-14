@@ -12,6 +12,14 @@ client = OpenAI(
 
 messages=[]
 
+# personality 
+
+messages.append(
+    {
+        "role": "system",
+        "content":"You are a very humble and friendly agent be to the point without sugarcoating and always brutally honest"
+    }
+)
 while True:
 
     user_input = input("\nSasu:")
