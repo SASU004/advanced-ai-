@@ -37,28 +37,31 @@ while True:
         }
     )
 
-    # now send the whole message list 
+    # now send the whole message list +tools
     response = client.chat.completions.create(
         model=os.getenv("MODEL"),
         messages=messages,
         tools=TOOLS,
     )
 
+    #response from the model 
+    
     msg=response.choices[0].message
-    if msg.tool_calls:
-        messages.append(msg)
+    if msg.tool_calls: #is tool calls present in the message 
+        messages.append(msg)  #history of convo
 
         for tool_call in msg.tool_calls:
-            func_name= tool_call.function.name
-            func_args= json.loads(tool_call.function.arguments or "{}")
+            func_name= tool_call.function.name #we get the fucntion name which my code wants to call (llm understood from the tool description that the code needs to call this fucntion)
+            func_args= json.loads(tool_call.function.arguments or "{}") #args is a string according to the format we convert it to a json 
 
-            fn= FUNCTION_NAME_TO_FUCNTION_MAP[func_name]
-            result = fn(**func_args)
+            fn= FUNCTION_NAME_TO_FUCNTION_MAP[func_name] #we have already mapped the fucntion name to get the actual pyhton function 
+            result = fn(**func_args) #** here is dictionary unpacking operattor
+            # this cals the fucntion with the arguments if there is any 
 
-            messages.append(
+            messages.append( #what ever my tool responded with i need to append that as well
                 {
-                    "role": "tool",
-                    "tool_id":tool_call.id,
+                    "role": "tool", #result is of tool call 
+                    "tool_id":tool_call.id, #llm keeps the tack of tools using id inside the fomat so it remebers okay this is the output for tool call no 76 or 67 etc 
                     "content": str(result),
                 }
             )
@@ -69,14 +72,15 @@ while True:
             messages=messages
         )
 
-        msg=response.choices[0].message
+        msg=response.choices[0].message # we need to update the msgs after tool calls 
 
-        messages.append(
-            {
-                "role": "assistant",
-                "content": msg.content
-            }
-        )
+    messages.append(
+        {
+            "role": "assistant",
+            "content": msg.content
+        }
+    )
+    print("Assistant: "+msg.content)
 
     # now append the response as well for the next user input to follow
     # messages.append(
@@ -87,7 +91,6 @@ while True:
     # )
 
     # print("Assistant: " + response.choices[0].message.content)
-    print("Assistant: "+msg.content)
 
 #role is added for the llm to understand who said what
 #this is done cause LLM IS STATELESS and whenever we 
