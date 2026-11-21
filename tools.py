@@ -9,6 +9,7 @@ def get_time():
 def get_city_weather(city):
     url = f"https://wttr.in/{city}?format=3"
     response = requests.get(url,timeout=10)
+    response.raise_for_status() #this will raise HTTPError if somehting is wrong 
     return response.text
 
 TOOLS=[
