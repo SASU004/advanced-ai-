@@ -14,6 +14,9 @@ client = OpenAI(
 
 messages=[]
 
+#safety limit 
+MAX_STEPS=5
+
 # personality 
 
 messages.append(
@@ -38,7 +41,7 @@ while True:
     )
 
 
-    while True: #there can be multiple tool calls
+    for steps in range(MAX_STEPS): #there can be multiple tool calls
         # now send the whole message list +tools
         response = client.chat.completions.create(
             model=os.getenv("MODEL"),
