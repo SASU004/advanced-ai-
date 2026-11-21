@@ -37,6 +37,7 @@ TOOLS=[
                         "description": "city to get the weather for.",
                     }
                 },
+                "required": ["city"]
             },
         
         },
