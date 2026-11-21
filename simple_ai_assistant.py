@@ -2,7 +2,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os 
 import json
-from tools import TOOLS,FUNCTION_NAME_TO_FUCNTION_MAP
+from tools import TOOLS,run_tool
+from Utilities.utilities import log
 
 load_dotenv() #by defalut looks for the .env file and puts the values 
 
@@ -27,7 +28,7 @@ messages.append(
 )
 while True:
 
-    user_input = input("\nSasu:")
+    user_input = input("🧑🏽\nSasu:")
     if user_input.lower() in ["exit","quit","goodbye"]:
         break 
 
@@ -57,21 +58,13 @@ while True:
 
             break
 
+        log(f"Step {steps + 1}: model requested {len(msg.tool_calls)}tool calls")
+        
         messages.append(msg)  #history of convo
 
         for tool_call in msg.tool_calls:
-            func_name= tool_call.function.name #we get the fucntion name which my code wants to call (llm understood from the tool description that the code needs to call this fucntion)
-            func_args={}
-
-            try : #if there is error in tool calling 
-                func_args= json.loads(tool_call.function.arguments or "{}") #args is a string according to the format we convert it to a json 
-
-                fn= FUNCTION_NAME_TO_FUCNTION_MAP[func_name] #we have already mapped the fucntion name to get the actual pyhton function 
-                result = fn(**func_args) #** here is dictionary unpacking operattor
-                # this cals the fucntion with the arguments if there is any 
-            except Exception as e:
-                result = f"Error while running {func_name} : {e}" #this also gets appended to the msg content for llm to figure out 
-
+            result=run_tool(tool_call)
+            
             messages.append( #what ever my tool responded with i need to append that as well
                 {
                     "role": "tool", #result is of tool call 
@@ -87,7 +80,7 @@ while True:
                 "content":fallback
             }
         )
-        print("Assistant: "+ fallback)
+        print("🤖Assistant: "+ fallback)
         continue
 
     messages.append(
@@ -96,7 +89,7 @@ while True:
             "content": msg.content
         }
     )
-    print("Assistant: "+ (msg.content or " "))
+    print("🤖Assistant: "+ (msg.content or " "))
 
     # now append the response as well for the next user input to follow
     # messages.append(

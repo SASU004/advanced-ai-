@@ -1,5 +1,7 @@
 from datetime import datetime
 import requests
+import json
+from Utilities.utilities import log
 
 def get_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -50,3 +52,21 @@ FUNCTION_NAME_TO_FUCNTION_MAP={
     "get_time": get_time,
     "get_city_weather": get_city_weather,
 }
+
+def run_tool(tool_call):
+    func_name= tool_call.function.name #we get the fucntion name which my code wants to call (llm understood from the tool description that the code needs to call this fucntion)
+    func_args={}
+    
+    try : #if there is error in tool calling 
+        func_args= json.loads(tool_call.function.arguments or "{}") #args is a string according to the format we convert it to a json 
+    
+        log(f" 🔧{func_name}({func_args})")
+    
+        fn= FUNCTION_NAME_TO_FUCNTION_MAP[func_name] #we have already mapped the fucntion name to get the actual pyhton function 
+        result = fn(**func_args) #** here is dictionary unpacking operattor
+        # this cals the fucntion with the arguments if there is any 
+    except Exception as e:
+        result = f"Error while running {func_name} : {e}" #this also gets appended to the msg content for llm to figure out 
+    
+    log(f" ↪{result}")
+    return str(result)
