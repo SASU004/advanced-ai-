@@ -61,11 +61,16 @@ while True:
 
         for tool_call in msg.tool_calls:
             func_name= tool_call.function.name #we get the fucntion name which my code wants to call (llm understood from the tool description that the code needs to call this fucntion)
-            func_args= json.loads(tool_call.function.arguments or "{}") #args is a string according to the format we convert it to a json 
+            func_args={}
 
-            fn= FUNCTION_NAME_TO_FUCNTION_MAP[func_name] #we have already mapped the fucntion name to get the actual pyhton function 
-            result = fn(**func_args) #** here is dictionary unpacking operattor
-            # this cals the fucntion with the arguments if there is any 
+            try : #if there is error in tool calling 
+                func_args= json.loads(tool_call.function.arguments or "{}") #args is a string according to the format we convert it to a json 
+
+                fn= FUNCTION_NAME_TO_FUCNTION_MAP[func_name] #we have already mapped the fucntion name to get the actual pyhton function 
+                result = fn(**func_args) #** here is dictionary unpacking operattor
+                # this cals the fucntion with the arguments if there is any 
+            except Exception as e:
+                result = f"Error while running {func_name} : {e}" #this also gets appended to the msg content for llm to figure out 
 
             messages.append( #what ever my tool responded with i need to append that as well
                 {
