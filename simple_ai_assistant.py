@@ -37,17 +37,23 @@ while True:
         }
     )
 
-    # now send the whole message list +tools
-    response = client.chat.completions.create(
-        model=os.getenv("MODEL"),
-        messages=messages,
-        tools=TOOLS,
-    )
 
-    #response from the model 
-    
-    msg=response.choices[0].message
-    if msg.tool_calls: #is tool calls present in the message 
+    while True: #there can be multiple tool calls
+        # now send the whole message list +tools
+        response = client.chat.completions.create(
+            model=os.getenv("MODEL"),
+            messages=messages,
+            tools=TOOLS,
+        )
+
+        #response from the model 
+        
+        msg=response.choices[0].message
+        
+        if not msg.tool_calls: #if no tool call in the message from the llm then just move out the loop of the tool call
+
+            break
+
         messages.append(msg)  #history of convo
 
         for tool_call in msg.tool_calls:
@@ -65,14 +71,6 @@ while True:
                     "content": str(result),
                 }
             )
-
-        #2nd call to LLM API
-        response=client.chat.completions.create(
-            model=os.getenv("MODEL"),
-            messages=messages
-        )
-
-        msg=response.choices[0].message # we need to update the msgs after tool calls 
 
     messages.append(
         {
