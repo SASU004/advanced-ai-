@@ -79,6 +79,16 @@ while True:
                     "content": str(result),
                 }
             )
+    else: #in pyhton else after a for loop runs only when the loop finished normally and not ended early by a break 
+        fallback="Sorry i couldnt finish this within the step limit"
+        messages.append(
+            {
+                "role":"assistant",
+                "content":fallback
+            }
+        )
+        print("Assistant: "+ fallback)
+        continue
 
     messages.append(
         {
