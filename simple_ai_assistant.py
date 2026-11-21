@@ -96,7 +96,7 @@ while True:
             "content": msg.content
         }
     )
-    print("Assistant: "+msg.content)
+    print("Assistant: "+ (msg.content or " "))
 
     # now append the response as well for the next user input to follow
     # messages.append(
