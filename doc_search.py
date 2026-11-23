@@ -55,3 +55,21 @@ def add_embeddings(documents):
         document["vector"]=vector # add that embedding value to the document itslef 
 
 
+# search top k documents for a user querry
+def search(query, documents, k=3):
+    query_embedding= get_embedding(query)
+
+    results=[] # empty list to story the top k docs related to the query
+    for document in documents:
+        score= compare_embedding(query_embedding, document["vector"])
+        results.append(
+            {
+                "score": float(score),
+                "source": document["source"],  #which file 
+                "text": document["text"],      #what was the text
+                "size": len(document["text"])  #length of the doc
+            }
+        )
+
+    results.sort(key=lambda record: record["score"],reverse=True)
+    return results[:k]
