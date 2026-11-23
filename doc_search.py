@@ -1,6 +1,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
-import os 
+import os
+import numpy
 
 load_dotenv() #by defalut looks for the .env file and puts the values 
 
@@ -26,9 +27,15 @@ def load_documents(folder=KB_FOLDER):
             documents.append(
                 {
                     "source": filename,
-                    "text": f.read()
+                    "text": f.read(),
                 }
             )  
     return documents
 
+
+
+def add_embeddings(documents):
+    for document in documents:
+        vector = get_embedding(document["text"])   #get the semantic value of the documents 
+        document["vector"]=vector # add that embedding value to the document itslef 
 
