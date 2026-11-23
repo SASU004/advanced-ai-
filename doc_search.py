@@ -17,7 +17,7 @@ KB_FOLDER=os.getenv("KB_FOLDER")
 
 def get_embedding(text):
 
-    response=client.embedding.create(
+    response=client.embeddings.create(
         model=EMBED_MODEL,
         input=text
     )
@@ -28,7 +28,7 @@ def compare_embedding(a,b):
     dot_product=numpy.dot(a,b)
     len_a=numpy.linalg.norm(a)          #length of the embedding 
     len_b=numpy.linalg.norm(b)
-    return dot_product/(len_a,len_b)
+    return dot_product/(len_a*len_b)
 
 
 def load_documents(folder=KB_FOLDER):   
@@ -53,7 +53,7 @@ def add_embeddings(documents):
     for document in documents:
         vector = get_embedding(document["text"])   #get the semantic value of the documents 
         document["vector"]=vector # add that embedding value to the document itslef 
-
+    return documents
 
 # search top k documents for a user querry
 def search(query, documents, k=3):
@@ -78,3 +78,16 @@ def search(query, documents, k=3):
 def test(user_query,documents, k=3):
     print(f"\nUser Querry: {user_query}\n")
     results= search (user_query,documents,k)
+
+    for r in results:
+        print(f"{r["score"]:.2f} - {r["source"]} - {r["size"]} characters")   #:.2f is for 2 decimal places formatting 
+
+documents=load_documents()
+documents=add_embeddings(documents)
+
+print(f"we have embedded {len(documents)} documents")
+
+user_query= "how many days for maternity leave?"
+
+test(user_query,documents,3)
+
