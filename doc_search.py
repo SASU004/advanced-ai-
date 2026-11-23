@@ -33,6 +33,12 @@ def load_documents(folder=KB_FOLDER):
     return documents
 
 
+def get_embedding(text):
+    response=client.embedding.create(
+        model=EMBED_MODEL,
+        input=text
+    )
+    return response.data[0].embedding
 
 def add_embeddings(documents):
     for document in documents:
