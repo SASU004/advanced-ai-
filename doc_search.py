@@ -91,3 +91,15 @@ user_query= "how many days for maternity leave?"
 
 test(user_query,documents,3)
 
+'''
+limitations
+1. one file ---> one embedding is not fair
+2. load_documents bar bar call karna is slow process  isntead we shoudl convert documents=[] to json
+3. crucial-->>user querry + content of the top score file will be a hastle since the doc might be really big , context window issues 
+
+chunking solves these 3 
+
+4. if top k are irrelevant then we wont even send it to the llm
+
+solved by a feature which will be added later 
+'''
