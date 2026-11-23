@@ -73,3 +73,8 @@ def search(query, documents, k=3):
 
     results.sort(key=lambda record: record["score"],reverse=True)
     return results[:k]
+
+
+def test(user_query,documents, k=3):
+    print(f"\nUser Querry: {user_query}\n")
+    results= search (user_query,documents,k)
