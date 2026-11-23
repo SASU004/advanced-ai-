@@ -15,6 +15,22 @@ EMBED_MODEL=os.getenv("EMBED_MODEL")
 KB_FOLDER=os.getenv("KB_FOLDER")
 
 
+def get_embedding(text):
+
+    response=client.embedding.create(
+        model=EMBED_MODEL,
+        input=text
+    )
+    return response.data[0].embedding
+
+
+def compare_embedding(a,b):
+    dot_product=numpy.dot(a,b)
+    len_a=numpy.linalg.norm(a)          #length of the embedding 
+    len_b=numpy.linalg.norm(b)
+    return dot_product/(len_a,len_b)
+
+
 def load_documents(folder=KB_FOLDER):   
     documents=[]
 
@@ -27,21 +43,15 @@ def load_documents(folder=KB_FOLDER):
             documents.append(
                 {
                     "source": filename,
-                    "text": f.read(),
+                    "text": f.read()
                 }
             )  
     return documents
 
 
-def get_embedding(text):
-    response=client.embedding.create(
-        model=EMBED_MODEL,
-        input=text
-    )
-    return response.data[0].embedding
-
 def add_embeddings(documents):
     for document in documents:
         vector = get_embedding(document["text"])   #get the semantic value of the documents 
         document["vector"]=vector # add that embedding value to the document itslef 
+
 
