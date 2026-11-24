@@ -68,7 +68,7 @@ def search(query,chunks, k=3):
             {
                 "score": float(score),
                 "source": chunk["source"],  #which file 
-                "chunk_id": chunk["chunk"]
+                "chunk_id": chunk["chunk_id"],
                 "text": chunk["text"],      #what was the text
                 "size": len(chunk["text"])  #length of the doc
             }
@@ -82,7 +82,7 @@ def search(query,chunks, k=3):
 def chunks_in_document(document):
     chunks=[]
     chunk_id=0
-    for parts in document["text"].split("\n\n"):  # for characters in document text split it using the double endl
+    for part in document["text"].split("\n\n"):  # for characters in document text split it using the double endl
         part=part.strip() #remove extra spaces
         if part:
             chunks.append({
@@ -91,7 +91,7 @@ def chunks_in_document(document):
                 "chunk_id":chunk_id,
             })
             chunk_id+=1
-        return chunks
+    return chunks
          
 
 def create_chunks():
@@ -108,9 +108,10 @@ def test(user_query,chunks, k=3):
 
     for r in results:
         print(f"{r["score"]:.2f} - {r["source"]} - {r["size"]} characters")   #:.2f is for 2 decimal places formatting 
+        print (f"{r['text']}\n")
 
 chunks = create_chunks()
-documents=add_embeddings(chunks)
+chunks=add_embeddings(chunks)
 
 print(f"we have embedded {len(chunks)} chunks")
 
