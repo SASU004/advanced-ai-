@@ -4,6 +4,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import numpy
+import json 
 
 load_dotenv() #by defalut looks for the .env file and puts the values 
 
@@ -15,6 +16,7 @@ client = OpenAI(
 
 EMBED_MODEL=os.getenv("EMBED_MODEL")
 KB_FOLDER=os.getenv("KB_FOLDER")
+VECTOR_STORE_FILE=os.getenv("VECTOR_STORE_FILE")
 
 
 def get_embedding(text):
@@ -110,9 +112,25 @@ def test(user_query,chunks, k=3):
         print(f"{r["score"]:.2f} - {r["source"]} - {r["size"]} characters")   #:.2f is for 2 decimal places formatting 
         print (f"{r['text']}\n")
 
-chunks = create_chunks()
-chunks=add_embeddings(chunks)
+def save_vector_store(chunks):
+    with open(VECTOR_STORE_FILE,"w",encoding="utf-8") as f:
+        json.dump(chunks,f,indent=4)   # indent 4 is just beautify
 
+def load_vector_store():
+    with open(VECTOR_STORE_FILE,"r",encoding="utf-8") as f:
+        return json.load(f) #returns the chunks  
+
+chunks = []
+
+if os.path.exists(VECTOR_STORE_FILE):   #if already the chunk exists 
+    chunks=load_vector_store()
+    print(f"loaded {len(chunks)} chunks from the vector store")
+else:
+    chunks = create_chunks()
+    chunks=add_embeddings(chunks)
+    save_vector_store(chunks)
+    print(f"created {len(chunks)} chunks and saved to the vector store file")
+    
 print(f"we have embedded {len(chunks)} chunks")
 
 user_query= "benefits of maternity leave"
