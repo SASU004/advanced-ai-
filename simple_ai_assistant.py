@@ -198,3 +198,21 @@ while True:
 #role is added for the llm to understand who said what
 #this is done cause LLM IS STATELESS and whenever we 
 #send anything ot the llm, they actually send the whole convo the llm
+
+
+
+""" LIMITATIONS after adding the kb tool:
+
+    small models might etirely skip the tool calls 
+    wrong chunk might be picked cause both llm and embedding mdoel are smal 
+    score of the chunk itself might be flawed cause smalll models 
+    vector_store:json might become stale cause if we change the knowledge base need to do chunking again and generate this again 
+    if wee change the embedding model then the vector_store:json will be invalid 
+    we compare querry embedding with every chunk which is slow if we have millions of users 
+
+
+    fixes:
+
+    we need Vector_DB
+
+ """
