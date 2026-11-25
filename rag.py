@@ -59,27 +59,6 @@ def add_embeddings(chunks):
         chunk["vector"]=vector # add that embedding value to the document itslef 
     return chunks
 
-# search top k chunk for a user querry
-def search(query,chunks, k=3):
-    query_embedding= get_embedding(query)
-
-    results=[] # empty list to story the top k docs related to the query
-    for chunk in chunks:
-        score= compare_embedding(query_embedding, chunk["vector"])
-        results.append(
-            {
-                "score": float(score),
-                "source": chunk["source"],  #which file 
-                "chunk_id": chunk["chunk_id"],
-                "text": chunk["text"],      #what was the text
-                "size": len(chunk["text"])  #length of the doc
-            }
-        )
-
-    results.sort(key=lambda record: record["score"],reverse=True)
-    return results[:k]
-
-
 #takes one doc and create multiple chunk 
 def chunks_in_document(document):
     chunks=[]
@@ -104,13 +83,6 @@ def create_chunks():
         chunks.extend(chunks_in_document(document))    #generate chunks from each doc then add it to the empty list 
     return chunks
 
-def test(user_query,chunks, k=3):
-    print(f"\nUser Querry: {user_query}\n")
-    results= search (user_query,chunks,k)
-
-    for r in results:
-        print(f"{r["score"]:.2f} - {r["source"]} - {r["size"]} characters")   #:.2f is for 2 decimal places formatting 
-        print (f"{r['text']}\n")
 
 def save_vector_store(chunks):
     with open(VECTOR_STORE_FILE,"w",encoding="utf-8") as f:
@@ -120,19 +92,39 @@ def load_vector_store():
     with open(VECTOR_STORE_FILE,"r",encoding="utf-8") as f:
         return json.load(f) #returns the chunks  
 
-chunks = []
+def load_chunks():
+    if os.path.exists(VECTOR_STORE_FILE):   #if already the chunk exists 
+        chunks=load_vector_store()
+        print(f"loaded {len(chunks)} chunks from the {VECTOR_STORE_FILE}")
+    else:
+        chunks = create_chunks()
+        chunks=add_embeddings(chunks)
+        save_vector_store(chunks)
+        print(f"created {len(chunks)} chunks and saved to {VECTOR_STORE_FILE}")
+        
+    return chunks
 
-if os.path.exists(VECTOR_STORE_FILE):   #if already the chunk exists 
-    chunks=load_vector_store()
-    print(f"loaded {len(chunks)} chunks from the vector store")
-else:
-    chunks = create_chunks()
-    chunks=add_embeddings(chunks)
-    save_vector_store(chunks)
-    print(f"created {len(chunks)} chunks and saved to the vector store file")
-    
-print(f"we have embedded {len(chunks)} chunks")
+chunks = load_chunks()
 
-user_query= "benefits of maternity leave"
+# search top k chunk for a user querry
+def search(query, k=3):
+    query_embedding= get_embedding(query)
 
-test(user_query,chunks,3)
+    results=[] # empty list to story the top k docs related to the query
+    for chunk in chunks:
+        score= compare_embedding(query_embedding, chunk["vector"])
+        results.append(
+            {
+                "score": float(score),
+                "source": chunk["source"],  #which file 
+                "chunk_id": chunk["chunk_id"],
+                "text": chunk["text"],      #what was the text
+                "size": len(chunk["text"])  #length of the doc
+            }
+        )
+
+    results.sort(key=lambda record: record["score"],reverse=True)
+    return results[:k]
+
+
+
