@@ -5,6 +5,7 @@ import json
 from tools import TOOLS,run_tool
 from Utilities.utilities import log
 from types import SimpleNamespace
+from memory import list_chats, load_chat, save_chat
 
 load_dotenv() #by defalut looks for the .env file and puts the values 
 
@@ -22,21 +23,23 @@ MAX_STEPS=5
 
 # personality 
 
-messages.append(
-    {
+SYSTEM_PROMPT= {
         "role": "system",
-        "content":"You are a helpful, humble assistant for Zorvex Technologies employees. "
-        "Answer general questions (programming, science, advice) from your own knowledge. "
-        "Use get_time only when the user asks for the current time, and get_city_weather only when the user asks about the weather. "
-        "If the user asks about the weather without naming a city, ask which city they mean before calling the tool. "
-        "For ANY question about Zorvex policies, benefits, leave, medical cover, HR, hiring, tech processes, incident reports or travel expenses, "
-        "you MUST first call search_knowledge_base. "
-        "Answer company questions ONLY from the text that search_knowledge_base returns. Do not use outside knowledge for company facts. "
-        "After the answer, cite the source like (leave_policy.txt #3). "
-        "If the returned text does not contain the answer, say exactly: I could not find this in the knowledge base. "
-        "Keep answers under 100 words."
+        "content":(
+            "You are a helpful, humble assistant for Zorvex Technologies employees. "
+            "Answer general questions (programming, science, advice) from your own knowledge. "
+            "Use get_time only when the user asks for the current time, and get_city_weather only when the user asks about the weather. "
+            "If the user asks about the weather without naming a city, ask which city they mean before calling the tool. "
+            "For ANY question about Zorvex policies, benefits, leave, medical cover, HR, hiring, tech processes, incident reports or travel expenses, "
+            "you MUST first call search_knowledge_base. "
+            "Answer company questions ONLY from the text that search_knowledge_base returns. Do not use outside knowledge for company facts. "
+            "After the answer, cite the source like (leave_policy.txt #3). "
+            "If the returned text does not contain the answer, say exactly: I could not find this in the knowledge base. "
+            "Keep answers under 100 words."
+        ),
     }
-)
+messages.append(SYSTEM_PROMPT)
+chat_file_path=None          # it stores the path of that file where current chat will be stored
 
 def build_tool_calls_payload(tool_calls):
     """
@@ -120,6 +123,29 @@ def stream_chat(history):
 
     return full_response,calls_list
 
+def show_chats(chats):
+    sl_no=1
+    for chat in chats:
+        title =chat["title"]
+        no_of_messages = chat["count"]
+        updated_last=chat["updated_last"]
+        print(f"{sl_no}. {title} - {no_of_messages} messages - (Last updated:{updated_last})")
+        sl_no+=1
+
+
+#before chat loop ask user if they want to resume existing chats 
+existing_chats=list_chats()
+
+if existing_chats:
+    last_chat=existing_chats[0]
+    answer= input(f"Continue your last chat: {last_chat["title"]}....? (yes/no): ")
+    if answer=="yes":
+        data=load_chat(last_chat["path"])
+        if data is not None:
+            messages=[SYSTEM_PROMPT]+data["messages"]
+            chat_file_path=last_chat["path"] #since we resumed the chat chat file path is the last chat file path 
+            print(f"Resumed: {last_chat["title"]}")
+
 
 # chat loop 
 
@@ -128,6 +154,53 @@ while True:
     user_input = input("\nSasu: ")
     if user_input.lower() in ["exit","quit","goodbye"]:
         break 
+
+    # now user can give commands like /new, /chats, /resume
+    command = user_input.strip().lower()
+    if command =="/new":
+        messages= [SYSTEM_PROMPT]
+        chat_file_path= None #new chat so no file location 
+        """so wehn we go to save this using save chat in memory.py it will go path = none so a new file will be created """
+        print("Started a new chat. The old one is still saved")
+        continue
+
+    if command=="/chats":
+        chats= list_chats()
+        if chats:
+            """if chats are present then print them as numbered list """
+            show_chats(chats) 
+        else :
+            print("No saved chats yet")
+        continue
+
+
+    if command=="/resume":
+        chats = list_chats()
+        if not chats:
+            print ("No chats to resume.")
+            continue
+
+        show_chats(chats)
+        choice = input("Chat number to resume (Press Enter to cancel): ")
+        choice= choice.strip()
+
+        if not choice:
+            continue
+        if not choice.isdigit() or not (1<= int (choice)<= len(chats)):
+            print("Canceleed. Invalid Choice.")
+            continue
+
+        picked_chat= chats[int (choice)-1] # indexing using 0 index using the picked chat number from the chats list
+        data = load_chat(picked_chat["path"]) # load that chat using the path we used above 
+        if data is None:
+            print("That chat could not be loaded.")
+            continue
+        messages=[SYSTEM_PROMPT]+ data["messages"]   # if there is messages just load it 
+        chat_file_path= picked_chat["path"]
+        print(f"Resumed {picked_chat['title']} ({len(data["messages"])} messages)")
+        continue  #now continue talking further
+
+
 
 
     #first append the new user input to all the prev ones     
@@ -183,8 +256,14 @@ while True:
             }
         )
         print("🤖 Assistant: "+ fallback)
+        chat_file_path=save_chat(chat_file_path,messages[1:])
         continue
 
+    messages.append({
+        "role":"assistant",
+        "content": full_response
+    })
+    chat_file_path=save_chat(chat_file_path,messages[1:])
     # now append the response as well for the next user input to follow
     # messages.append(
     #     {

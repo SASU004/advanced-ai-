@@ -1,4 +1,18 @@
+# virtual envs
 .venv/
 venv/
+
+# python
 __pycache__/
+*.pyc
+
+# secrets
 .env
+.env.*
+
+# generated vector stores (rebuild with: python chroma_store.py)
+chromadbStorage/
+knowledge_base/vector_store.json
+
+# runtime data
+chat_history
