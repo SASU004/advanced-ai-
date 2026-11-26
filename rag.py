@@ -67,6 +67,7 @@ def chunks_in_document(document):
         part=part.strip() #remove extra spaces
         if part:
             chunks.append({
+                "id":f"{document["source"]}#{chunk_id}",
                 "source":document["source"],
                 "text":part,
                 "chunk_id":chunk_id,

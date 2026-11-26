@@ -2,7 +2,8 @@ from datetime import datetime
 import requests
 import json
 from Utilities.utilities import log
-from rag import search
+from chroma_store import search
+
 
 def get_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -15,23 +16,37 @@ def get_city_weather(city):
     response.raise_for_status() #this will raise HTTPError if somehting is wrong 
     return response.text
 
+
+"""commneted this code cause its the json version """
+# def search_knowledge_base(query):
+#     results=search(query,3)
+#     log(f" 📚 Knowledge Base search: {query} ")  # printing which querry is being searched as a log 
+#     for r in results:
+#         log(f"  {r["score"]:.2f}-{r["source"]} # {r["chunk_id"]}") # printing all the score etc for all the chunks we fetched
+
+#     blocks=[]
+#     for r in results :
+#         source_file_name = r["source"]
+#         chunk_id         =r["chunk_id"]
+#         chunk_text       =r["text"]
+
+#         header = f"[{source_file_name} #{chunk_id}]"        #basic formatting 
+#         block=f"{header}\n{chunk_text}"             #header then block text 
+#         blocks.append(block)                                        #appending (we can use a string insted as well no issues )
+
+#     return "\n\n".join(blocks) # python utility easy and cool join using 2 \n 
+
 def search_knowledge_base(query):
-    results=search(query,3)
-    log(f" 📚 Knowledge Base search: {query} ")  # printing which querry is being searched as a log 
+    results = search(query, 3)
+
+    log(f" 📚 Knowledge Base search: {query}")
+
+    blocks = []
     for r in results:
-        log(f"  {r["score"]:.2f}-{r["source"]} # {r["chunk_id"]}") # printing all the score etc for all the chunks we fetched
+        log(f"  {r['score']:.2f} - {r['source']} #{r['chunk_id']}")
+        blocks.append(f"[{r['source']} #{r['chunk_id']}]\n{r['text']}")
 
-    blocks=[]
-    for r in results :
-        source_file_name = r["source"]
-        chunk_id         =r["chunk_id"]
-        chunk_text       =r["text"]
-
-        header = f"[{source_file_name} #{chunk_id}]"        #basic formatting 
-        block=f"{header}\n{chunk_text}"             #header then block text 
-        blocks.append(block)                                        #appending (we can use a string insted as well no issues )
-
-    return "\n\n".join(blocks) # python utility easy and cool join using 2 \n 
+    return "\n\n".join(blocks)
 
 
 TOOLS=[
